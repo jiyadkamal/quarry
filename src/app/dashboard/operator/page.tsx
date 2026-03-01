@@ -87,7 +87,10 @@ export default function OperatorDashboard() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-text-primary">Operator Dashboard</h1>
-                    <p className="text-base font-mono text-secondary mt-1 font-bold">ID: {data?.user?.operatorId}</p>
+                    <div className="flex flex-col mt-4 p-6 rounded-2xl bg-white border-2 border-primary/10 shadow-sm inline-block">
+                        <span className="text-xs uppercase font-black text-primary/40 tracking-[0.2em] mb-2">OPERATOR IDENTIFICATION</span>
+                        <p className="text-6xl font-mono text-primary font-black tracking-tighter drop-shadow-md">{data?.user?.operatorId}</p>
+                    </div>
                 </div>
                 <div className="flex gap-3">
                     <Button icon={Factory} onClick={() => setShowProdModal(true)}>Log Production</Button>

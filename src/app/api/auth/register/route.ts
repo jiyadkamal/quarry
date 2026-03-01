@@ -34,7 +34,7 @@ export async function POST(request: Request) {
             // Auto-generate human-readable Operator ID
             // The countSnapshot is no longer used for ID generation, but kept as per user's provided edit.
             const countSnapshot = await db.collection('users').where('role', '==', 'operator').get();
-            newUser.operatorId = `OP-${Math.floor(Math.random() * 100000).toString().padStart(5, '0')}`;
+            newUser.operatorId = `OP-${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`;
         }
 
         const docRef = await db.collection('users').add(newUser);
