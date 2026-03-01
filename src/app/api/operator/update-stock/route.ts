@@ -9,7 +9,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { materialType, quantity } = await request.json();
+        const { materialType, quantity, imageBase64 } = await request.json();
         if (!materialType || quantity === undefined) {
             return NextResponse.json({ error: 'Material type and quantity are required' }, { status: 400 });
         }
@@ -21,18 +21,22 @@ export async function POST(request: Request) {
 
         const stockSnapshot = await stockQuery.get();
 
+        const stockData: any = {
+            quantity,
+            lastUpdated: new Date().toISOString(),
+        };
+        if (imageBase64) {
+            stockData.imageBase64 = imageBase64;
+        }
+
         if (stockSnapshot.empty) {
             await db.collection('stock').add({
                 operatorId: session.operatorId,
                 materialType,
-                quantity,
-                lastUpdated: new Date().toISOString(),
+                ...stockData,
             });
         } else {
-            await stockSnapshot.docs[0].ref.update({
-                quantity,
-                lastUpdated: new Date().toISOString(),
-            });
+            await stockSnapshot.docs[0].ref.update(stockData);
         }
 
         return NextResponse.json({ success: true });

@@ -5,8 +5,16 @@ import { getSession } from '@/lib/auth';
 export async function POST(request: Request) {
     try {
         const session = await getSession();
-        if (!session || session.role !== 'transport' || !session.connectedOperatorId) {
-            return NextResponse.json({ error: 'Unauthorized or not connected to an operator' }, { status: 401 });
+        if (!session || session.role !== 'transport') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Always read connectedOperatorId from Firestore (not JWT) 
+        const userDoc = await db.collection('users').doc(session.userId).get();
+        const connectedOperatorId = userDoc.exists ? userDoc.data()?.connectedOperatorId : null;
+
+        if (!connectedOperatorId) {
+            return NextResponse.json({ error: 'You must be connected to an operator first' }, { status: 401 });
         }
 
         const { materialType, quantity } = await request.json();
@@ -16,7 +24,7 @@ export async function POST(request: Request) {
 
         // Check stock
         const stockSnapshot = await db.collection('stock')
-            .where('operatorId', '==', session.connectedOperatorId)
+            .where('operatorId', '==', connectedOperatorId)
             .where('materialType', '==', materialType)
             .limit(1)
             .get();
@@ -32,11 +40,14 @@ export async function POST(request: Request) {
 
         // Create request
         const newRequest = {
-            operatorId: session.connectedOperatorId,
+            operatorId: connectedOperatorId,
             requestedBy: session.userId,
+            requestedByEmail: session.email,
             materialType,
             quantity,
             status: 'pending',
+            currentStage: 'pending',
+            statusHistory: [],
             date: new Date().toISOString(),
         };
 

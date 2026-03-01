@@ -67,7 +67,7 @@ export default function AdminUsersPage() {
                                     <td className="py-3 px-4 font-medium">{u.name}</td>
                                     <td className="py-3 px-4 text-text-secondary">{u.email}</td>
                                     <td className="py-3 px-4"><StatusBadge status={u.role} /></td>
-                                    <td className="py-4 px-4 font-mono text-xl font-black text-primary tracking-tight">{u.operatorId || '—'}</td>
+                                    <td className="py-3 px-4 font-mono text-sm text-primary font-bold">{u.operatorId || '—'}</td>
                                     <td className="py-3 px-4 font-mono text-xs">{u.connectedOperatorId || '—'}</td>
                                     <td className="py-3 px-4 text-text-muted">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
                                 </tr>

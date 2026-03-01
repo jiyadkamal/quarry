@@ -17,27 +17,74 @@ const STAGE_LABELS: Record<string, string> = {
 
 function StageProgress({ currentStage }: { currentStage: string }) {
     if (currentStage === 'rejected') {
-        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-danger-light text-danger">Rejected</span>;
+        return <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold bg-red-50 text-red-600 border border-red-200">✕ Rejected</span>;
     }
     if (currentStage === 'pending') {
-        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-warning-light" style={{ color: '#D97706' }}>Awaiting Approval</span>;
+        return <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold bg-amber-50 text-amber-600 border border-amber-200">⏳ Awaiting Approval</span>;
     }
     const stages = ['accepted', 'mining', 'crushing', 'powdering', 'packing', 'completed'];
     const currentIdx = stages.indexOf(currentStage);
     return (
-        <div className="flex items-center gap-1 flex-wrap">
-            {stages.map((stage, idx) => {
-                const isCompleted = idx <= currentIdx;
-                const isCurrent = idx === currentIdx;
-                return (
-                    <div key={stage} className="flex items-center gap-1">
-                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${isCurrent ? 'bg-primary text-white shadow-md'
-                                : isCompleted ? 'bg-success-light text-success'
-                                    : 'bg-gray-100 text-gray-400'
-                            }`}>
-                            {STAGE_LABELS[stage]}
+        <div className="py-4">
+            <div className="relative flex items-center justify-between">
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2" />
+                <div
+                    className="absolute top-1/2 left-0 h-0.5 -translate-y-1/2 transition-all duration-500"
+                    style={{
+                        width: `${(currentIdx / (stages.length - 1)) * 100}%`,
+                        background: 'linear-gradient(90deg, #10B981, #043873)',
+                    }}
+                />
+                {stages.map((stage, idx) => {
+                    const isCompleted = idx <= currentIdx;
+                    const isCurrent = idx === currentIdx;
+                    return (
+                        <div key={stage} className="relative flex flex-col items-center z-10">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${isCurrent
+                                    ? 'bg-primary text-white shadow-lg shadow-primary/40 ring-4 ring-primary/15'
+                                    : isCompleted
+                                        ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                                        : 'bg-white text-gray-400 border-2 border-gray-200'
+                                }`}>
+                                {isCompleted && !isCurrent ? '✓' : idx + 1}
+                            </div>
+                            <span className={`mt-2 text-[10px] font-bold uppercase tracking-wider ${isCurrent ? 'text-primary' : isCompleted ? 'text-emerald-600' : 'text-gray-400'
+                                }`}>
+                                {STAGE_LABELS[stage]}
+                            </span>
                         </div>
-                        {idx < stages.length - 1 && <ArrowRight className={`w-3 h-3 ${isCompleted ? 'text-success' : 'text-gray-300'}`} />}
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+function StatusTimeline({ history }: { history: any[] }) {
+    if (!history || history.length === 0) return null;
+    return (
+        <div className="mt-4 space-y-0">
+            {history.map((entry: any, idx: number) => {
+                const isLast = idx === history.length - 1;
+                return (
+                    <div key={idx} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                            <div className={`w-3 h-3 rounded-full shrink-0 mt-1.5 ${isLast ? 'bg-primary ring-4 ring-primary/10' : 'bg-emerald-400'}`} />
+                            {!isLast && <div className="w-px flex-1 bg-gray-200 my-1" />}
+                        </div>
+                        <div className="pb-5 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-xs font-bold uppercase tracking-wide ${isLast ? 'text-primary' : 'text-text-primary'}`}>
+                                    {STAGE_LABELS[entry.stage] || entry.stage}
+                                </span>
+                                <span className="text-[10px] text-text-muted bg-gray-100 px-2 py-0.5 rounded-full">{new Date(entry.timestamp).toLocaleString()}</span>
+                            </div>
+                            {entry.comment && (
+                                <div className="mt-1.5 px-3 py-2 rounded-lg bg-surface border-l-2 border-primary/30 text-sm text-text-secondary">
+                                    {entry.comment}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 );
             })}
@@ -62,7 +109,7 @@ export default function TransportHistoryPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-text-primary">Order History</h1>
+                <h1 className="text-2xl font-bold text-text-primary">Dispatch History</h1>
                 <p className="text-sm text-text-secondary mt-1">Track all your past and current orders</p>
             </div>
 
@@ -75,32 +122,14 @@ export default function TransportHistoryPage() {
                             <div key={r.id} className="p-5 rounded-2xl bg-surface border border-border-light">
                                 <div className="flex items-start justify-between mb-3">
                                     <div>
-                                        <p className="font-semibold text-text-primary">{r.materialType}</p>
-                                        <p className="text-sm text-text-secondary">Quantity: <span className="font-bold text-primary">{r.quantity}</span></p>
+                                        <p className="font-semibold text-text-primary text-lg">{r.materialType}</p>
+                                        <p className="text-sm text-text-secondary">Quantity: <span className="font-bold text-primary text-lg">{r.quantity}</span></p>
                                         <p className="text-xs text-text-muted">{new Date(r.date).toLocaleString()}</p>
                                     </div>
                                     <StatusBadge status={r.currentStage || r.status} />
                                 </div>
                                 <StageProgress currentStage={r.currentStage || r.status} />
-                                {r.statusHistory && r.statusHistory.length > 0 && (
-                                    <div className="mt-3 pl-3 border-l-2 border-primary/15 space-y-2">
-                                        {r.statusHistory.map((entry: any, idx: number) => (
-                                            <div key={idx} className="relative pl-4">
-                                                <div className="absolute -left-[9px] top-[6px] w-3 h-3 rounded-full bg-primary/20 border-2 border-primary" />
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold text-primary uppercase">{STAGE_LABELS[entry.stage] || entry.stage}</span>
-                                                    <span className="text-[10px] text-text-muted">{new Date(entry.timestamp).toLocaleString()}</span>
-                                                </div>
-                                                {entry.comment && (
-                                                    <div className="flex items-start gap-1.5 mt-0.5">
-                                                        <MessageSquare className="w-3 h-3 text-text-muted mt-0.5 shrink-0" />
-                                                        <p className="text-xs text-text-secondary">{entry.comment}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                <StatusTimeline history={r.statusHistory} />
                             </div>
                         ))}
                     </div>

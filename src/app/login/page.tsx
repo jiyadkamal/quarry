@@ -39,10 +39,19 @@ export default function LoginPage() {
         <div className="min-h-screen flex">
             {/* Left Side — Branding */}
             <div
-                className="hidden lg:flex lg:flex-1 flex-col justify-between p-12"
-                style={{ background: 'linear-gradient(135deg, #043873 0%, #0a5aad 50%, #022550 100%)' }}
+                className="hidden lg:flex lg:flex-1 flex-col justify-between p-12 relative overflow-hidden"
             >
-                <div>
+                {/* Background Image with Overlay */}
+                <div
+                    className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
+                    style={{ backgroundImage: 'url("/images/hero.png")' }}
+                />
+                <div
+                    className="absolute inset-0 z-10"
+                    style={{ background: 'linear-gradient(135deg, rgba(4, 56, 115, 0.95) 0%, rgba(10, 90, 173, 0.8) 50%, rgba(2, 37, 80, 0.9) 100%)' }}
+                />
+
+                <div className="relative z-20">
                     <div className="flex items-center gap-3 mb-16">
                         <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center">
                             <Mountain className="w-6 h-6 text-primary" />
@@ -57,7 +66,7 @@ export default function LoginPage() {
                         Manage materials, track production, coordinate transport — all from one powerful dashboard.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 relative z-20">
                     <div className="flex -space-x-2">
                         {['#4F9CF9', '#10B981', '#F59E0B', '#8B5CF6'].map((bg, i) => (
                             <div key={i} className="w-8 h-8 rounded-full border-2 border-primary flex items-center justify-center text-white text-[10px] font-bold" style={{ background: bg }}>

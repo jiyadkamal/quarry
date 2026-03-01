@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Package, Factory, Wrench, ClipboardList, Users, ArrowRight, MessageSquare, RefreshCw } from 'lucide-react';
-import { StatCard, DataCard, StatusBadge, EmptyState, Button, Modal, Input, Select } from '@/components/ui';
+import { Package, Wrench, ClipboardList, Users, ArrowRight, MessageSquare, RefreshCw, ImagePlus } from 'lucide-react';
+import { StatCard, DataCard, StatusBadge, EmptyState, Button, Modal, Input } from '@/components/ui';
 import toast from 'react-hot-toast';
 
 const STAGE_ORDER = ['accepted', 'mining', 'crushing', 'powdering', 'packing', 'completed'];
@@ -19,30 +19,45 @@ const STAGE_LABELS: Record<string, string> = {
 
 function StageProgress({ currentStage }: { currentStage: string }) {
     if (currentStage === 'rejected') {
-        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-danger-light text-danger">Rejected</span>;
+        return <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold bg-red-50 text-red-600 border border-red-200">✕ Rejected</span>;
     }
     if (currentStage === 'pending') {
-        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-warning-light" style={{ color: '#D97706' }}>Awaiting Approval</span>;
+        return <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold bg-amber-50 text-amber-600 border border-amber-200">⏳ Awaiting Approval</span>;
     }
     const stages = STAGE_ORDER;
     const currentIdx = stages.indexOf(currentStage);
     return (
-        <div className="flex items-center gap-1 flex-wrap">
-            {stages.map((stage, idx) => {
-                const isCompleted = idx <= currentIdx;
-                const isCurrent = idx === currentIdx;
-                return (
-                    <div key={stage} className="flex items-center gap-1">
-                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide transition-all ${isCurrent ? 'bg-primary text-white shadow-md shadow-primary/20 scale-110'
-                                : isCompleted ? 'bg-success-light text-success'
-                                    : 'bg-gray-100 text-gray-400'
-                            }`}>
-                            {STAGE_LABELS[stage]}
+        <div className="py-4">
+            <div className="relative flex items-center justify-between">
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2" />
+                <div
+                    className="absolute top-1/2 left-0 h-0.5 -translate-y-1/2 transition-all duration-500"
+                    style={{
+                        width: `${(currentIdx / (stages.length - 1)) * 100}%`,
+                        background: 'linear-gradient(90deg, #10B981, #043873)',
+                    }}
+                />
+                {stages.map((stage, idx) => {
+                    const isCompleted = idx <= currentIdx;
+                    const isCurrent = idx === currentIdx;
+                    return (
+                        <div key={stage} className="relative flex flex-col items-center z-10">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${isCurrent
+                                    ? 'bg-primary text-white shadow-lg shadow-primary/40 ring-4 ring-primary/15'
+                                    : isCompleted
+                                        ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                                        : 'bg-white text-gray-400 border-2 border-gray-200'
+                                }`}>
+                                {isCompleted && !isCurrent ? '✓' : idx + 1}
+                            </div>
+                            <span className={`mt-2 text-[10px] font-bold uppercase tracking-wider ${isCurrent ? 'text-primary' : isCompleted ? 'text-emerald-600' : 'text-gray-400'
+                                }`}>
+                                {STAGE_LABELS[stage]}
+                            </span>
                         </div>
-                        {idx < stages.length - 1 && <ArrowRight className={`w-3 h-3 ${isCompleted ? 'text-success' : 'text-gray-300'}`} />}
-                    </div>
-                );
-            })}
+                    );
+                })}
+            </div>
         </div>
     );
 }
@@ -50,22 +65,31 @@ function StageProgress({ currentStage }: { currentStage: string }) {
 function StatusTimeline({ history }: { history: any[] }) {
     if (!history || history.length === 0) return null;
     return (
-        <div className="mt-3 pl-3 border-l-2 border-primary/15 space-y-2">
-            {history.map((entry: any, idx: number) => (
-                <div key={idx} className="relative pl-4">
-                    <div className="absolute -left-[9px] top-[6px] w-3 h-3 rounded-full bg-primary/20 border-2 border-primary" />
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-primary uppercase">{STAGE_LABELS[entry.stage] || entry.stage}</span>
-                        <span className="text-[10px] text-text-muted">{new Date(entry.timestamp).toLocaleString()}</span>
-                    </div>
-                    {entry.comment && (
-                        <div className="flex items-start gap-1.5 mt-0.5">
-                            <MessageSquare className="w-3 h-3 text-text-muted mt-0.5 shrink-0" />
-                            <p className="text-xs text-text-secondary">{entry.comment}</p>
+        <div className="mt-4 space-y-0">
+            {history.map((entry: any, idx: number) => {
+                const isLast = idx === history.length - 1;
+                return (
+                    <div key={idx} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                            <div className={`w-3 h-3 rounded-full shrink-0 mt-1.5 ${isLast ? 'bg-primary ring-4 ring-primary/10' : 'bg-emerald-400'}`} />
+                            {!isLast && <div className="w-px flex-1 bg-gray-200 my-1" />}
                         </div>
-                    )}
-                </div>
-            ))}
+                        <div className="pb-5 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-xs font-bold uppercase tracking-wide ${isLast ? 'text-primary' : 'text-text-primary'}`}>
+                                    {STAGE_LABELS[entry.stage] || entry.stage}
+                                </span>
+                                <span className="text-[10px] text-text-muted bg-gray-100 px-2 py-0.5 rounded-full">{new Date(entry.timestamp).toLocaleString()}</span>
+                            </div>
+                            {entry.comment && (
+                                <div className="mt-1.5 px-3 py-2 rounded-lg bg-surface border-l-2 border-primary/30 text-sm text-text-secondary">
+                                    {entry.comment}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })}
         </div>
     );
 }
@@ -73,15 +97,27 @@ function StatusTimeline({ history }: { history: any[] }) {
 export default function OperatorDashboard() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [showProdModal, setShowProdModal] = useState(false);
     const [showStockModal, setShowStockModal] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
-    const [machineStatus, setMachineStatus] = useState('');
-    const [prodForm, setProdForm] = useState({ rawInput: '', outputType: '', outputQuantity: '' });
     const [stockForm, setStockForm] = useState({ materialType: '', quantity: '' });
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [statusForm, setStatusForm] = useState({ stage: '', comment: '' });
     const [submitLoading, setSubmitLoading] = useState(false);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('Image must be under 2MB');
+            return;
+        }
+        setImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setImagePreview(reader.result as string);
+        reader.readAsDataURL(file);
+    };
 
     const fetchData = async () => {
         try {
@@ -93,42 +129,21 @@ export default function OperatorDashboard() {
 
     useEffect(() => { fetchData(); }, []);
 
-    const handleLogProduction = async () => {
-        setSubmitLoading(true);
-        try {
-            const res = await fetch('/api/operator/log-production', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...prodForm, outputQuantity: Number(prodForm.outputQuantity) }),
-            });
-            if (res.ok) { toast.success('Production logged & stock updated!'); setShowProdModal(false); setProdForm({ rawInput: '', outputType: '', outputQuantity: '' }); fetchData(); }
-            else { const d = await res.json(); toast.error(d.error); }
-        } catch { toast.error('Failed'); } finally { setSubmitLoading(false); }
-    };
-
     const handleUpdateStock = async () => {
         setSubmitLoading(true);
         try {
+            const body: any = { materialType: stockForm.materialType, quantity: Number(stockForm.quantity) };
+            if (imagePreview) {
+                body.imageBase64 = imagePreview;
+            }
             const res = await fetch('/api/operator/update-stock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ materialType: stockForm.materialType, quantity: Number(stockForm.quantity) }),
+                body: JSON.stringify(body),
             });
-            if (res.ok) { toast.success('Stock updated!'); setShowStockModal(false); setStockForm({ materialType: '', quantity: '' }); fetchData(); }
+            if (res.ok) { toast.success('Stock updated!'); setShowStockModal(false); setStockForm({ materialType: '', quantity: '' }); setImageFile(null); setImagePreview(null); fetchData(); }
             else { const d = await res.json(); toast.error(d.error); }
         } catch { toast.error('Failed'); } finally { setSubmitLoading(false); }
-    };
-
-    const handleMachineStatus = async (status: string) => {
-        try {
-            const res = await fetch('/api/operator/machine-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status }),
-            });
-            if (res.ok) { setMachineStatus(status); toast.success(`Machine status: ${status}`); }
-            else { const d = await res.json(); toast.error(d.error); }
-        } catch { toast.error('Failed'); }
     };
 
     const handleApprove = async (id: string, status: 'approved' | 'rejected') => {
@@ -179,8 +194,6 @@ export default function OperatorDashboard() {
     const totalStock = data?.stock?.reduce((s: number, i: any) => s + (i.quantity || 0), 0) || 0;
     const pendingRequests = data?.requests?.filter((r: any) => r.status === 'pending') || [];
     const activeRequests = data?.requests?.filter((r: any) => ['accepted', 'in-progress'].includes(r.status)) || [];
-    const allRequests = data?.requests || [];
-    const totalProduction = data?.productionLogs?.reduce((s: number, l: any) => s + (l.outputQuantity || 0), 0) || 0;
 
     // Available stages for status update modal
     const getAvailableStages = (request: any) => {
@@ -194,49 +207,19 @@ export default function OperatorDashboard() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-text-primary">Operator Dashboard</h1>
-                    <div className="flex flex-col mt-3 p-5 rounded-2xl bg-white border-2 border-primary/10 shadow-sm">
-                        <span className="text-[10px] uppercase font-black text-primary/40 tracking-[0.2em] mb-1">Operator ID</span>
-                        <p className="text-3xl font-mono text-primary font-black tracking-tighter">{data?.user?.operatorId}</p>
-                    </div>
+                    <p className="text-sm text-text-secondary mt-1">Manage orders and material stock</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button icon={Factory} onClick={() => setShowProdModal(true)}>Log Production</Button>
-                    <Button icon={Package} variant="secondary" onClick={() => setShowStockModal(true)}>Add Material</Button>
+                    <Button icon={Package} variant="primary" onClick={() => setShowStockModal(true)}>Add Material</Button>
                 </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-fade-in">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 animate-fade-in">
                 <StatCard title="Total Stock" value={totalStock.toLocaleString()} icon={Package} color="green" />
-                <StatCard title="Production Output" value={totalProduction.toLocaleString()} icon={Factory} color="blue" subtitle={`${data?.productionLogs?.length || 0} entries`} />
                 <StatCard title="Pending Orders" value={pendingRequests.length} icon={ClipboardList} color="yellow" />
                 <StatCard title="Active Orders" value={activeRequests.length} icon={Wrench} color="purple" />
             </div>
-
-            {/* Machine Status */}
-            <DataCard title="Machine Status" subtitle="Update current machine operating status">
-                <div className="flex flex-wrap gap-3">
-                    {['Running', 'Stopped', 'Maintenance'].map((s) => (
-                        <button
-                            key={s}
-                            onClick={() => handleMachineStatus(s)}
-                            className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 border-2 ${machineStatus === s
-                                ? s === 'Running' ? 'bg-success text-white border-success shadow-lg'
-                                    : s === 'Stopped' ? 'bg-danger text-white border-danger shadow-lg'
-                                        : 'bg-warning text-white border-warning shadow-lg'
-                                : 'bg-white text-text-secondary border-border hover:border-primary hover:text-primary'
-                                }`}
-                        >
-                            {s}
-                        </button>
-                    ))}
-                    {machineStatus && (
-                        <div className="ml-4 flex items-center">
-                            <StatusBadge status={machineStatus} />
-                        </div>
-                    )}
-                </div>
-            </DataCard>
 
             {/* Pending Orders (Need Approval) */}
             <DataCard title="Pending Orders" subtitle={`${pendingRequests.length} awaiting your approval`}>
@@ -288,15 +271,31 @@ export default function OperatorDashboard() {
             {/* Current Stock (Material Catalog) */}
             <DataCard title="Material Catalog" subtitle="Materials available for transport users to order">
                 {(!data?.stock || data.stock.length === 0) ? (
-                    <EmptyState icon={Package} title="No Materials" description="Add materials using 'Add Material' or log production to auto-create stock." />
+                    <EmptyState icon={Package} title="No Materials" description="Add materials using 'Add Material' to start accepting orders." />
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {data.stock.map((s: any) => (
-                            <div key={s.id} className="p-5 rounded-2xl bg-surface border border-border-light">
-                                <Package className="w-5 h-5 text-secondary mb-2" />
-                                <p className="font-semibold">{s.materialType}</p>
-                                <p className="text-2xl font-bold text-primary mt-1">{s.quantity?.toLocaleString()}</p>
-                                <p className="text-xs text-text-muted mt-1">Available for orders</p>
+                            <div key={s.id} className="p-0 overflow-hidden rounded-2xl bg-surface border border-border-light group hover:border-primary/30 transition-all">
+                                {s.imageBase64 ? (
+                                    <div className="h-36 w-full overflow-hidden bg-gray-50 relative">
+                                        <img src={s.imageBase64} alt={s.materialType} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                                    </div>
+                                ) : (
+                                    <div className="h-36 w-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                                        <Package className="w-12 h-12 text-text-muted/40" />
+                                    </div>
+                                )}
+                                <div className="p-5">
+                                    <p className="font-bold text-text-primary text-lg">{s.materialType}</p>
+                                    <div className="flex items-end justify-between mt-2">
+                                        <div>
+                                            <p className="text-2xl font-black text-primary">{s.quantity?.toLocaleString()}</p>
+                                            <p className="text-[10px] uppercase font-bold text-text-muted tracking-wide">Available Units</p>
+                                        </div>
+                                        <div className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase">In Stock</div>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -326,27 +325,39 @@ export default function OperatorDashboard() {
                 )}
             </DataCard>
 
-            {/* Production Modal */}
-            <Modal open={showProdModal} onClose={() => setShowProdModal(false)} title="Log Production">
-                <div className="space-y-4">
-                    <Input label="Raw Material Input" name="rawInput" placeholder="e.g. Granite Blocks" value={prodForm.rawInput} onChange={(e) => setProdForm({ ...prodForm, rawInput: e.target.value })} required />
-                    <Input label="Output Material Type" name="outputType" placeholder="e.g. Crushed Stone 20mm" value={prodForm.outputType} onChange={(e) => setProdForm({ ...prodForm, outputType: e.target.value })} required />
-                    <Input label="Output Quantity" name="outputQuantity" type="number" placeholder="e.g. 500" value={prodForm.outputQuantity} onChange={(e) => setProdForm({ ...prodForm, outputQuantity: e.target.value })} required />
-                    <div className="flex justify-end gap-3 pt-2">
-                        <Button variant="ghost" onClick={() => setShowProdModal(false)}>Cancel</Button>
-                        <Button onClick={handleLogProduction} loading={submitLoading}>Log Production</Button>
-                    </div>
-                </div>
-            </Modal>
-
             {/* Stock Modal */}
-            <Modal open={showStockModal} onClose={() => setShowStockModal(false)} title="Add / Update Material">
+            <Modal open={showStockModal} onClose={() => { setShowStockModal(false); setImageFile(null); setImagePreview(null); }} title="Add / Update Material">
                 <div className="space-y-4">
                     <Input label="Material Type" name="materialType" placeholder="e.g. Sand, Gravel, Crushed Stone" value={stockForm.materialType} onChange={(e) => setStockForm({ ...stockForm, materialType: e.target.value })} required />
                     <Input label="Quantity Available" name="quantity" type="number" placeholder="e.g. 1000" value={stockForm.quantity} onChange={(e) => setStockForm({ ...stockForm, quantity: e.target.value })} required />
+
+                    {/* Image Upload */}
+                    <div>
+                        <label className="block text-sm font-medium text-text-primary mb-1.5">Material Photo</label>
+                        <div className="flex items-center gap-4">
+                            {imagePreview ? (
+                                <div className="w-24 h-24 rounded-xl overflow-hidden border-2 border-primary/20 relative group">
+                                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => { setImageFile(null); setImagePreview(null); }}
+                                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold"
+                                    >Remove</button>
+                                </div>
+                            ) : (
+                                <label className="w-24 h-24 rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50">
+                                    <ImagePlus className="w-6 h-6 text-text-muted mb-1" />
+                                    <span className="text-[10px] text-text-muted font-medium">Upload</span>
+                                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                                </label>
+                            )}
+                            <p className="text-xs text-text-muted flex-1">Upload a photo of this material (max 2MB). It will be shown to transport users when they order.</p>
+                        </div>
+                    </div>
+
                     <p className="text-xs text-text-muted">💡 This material will appear in the dropdown when transport users place orders.</p>
                     <div className="flex justify-end gap-3 pt-2">
-                        <Button variant="ghost" onClick={() => setShowStockModal(false)}>Cancel</Button>
+                        <Button variant="ghost" onClick={() => { setShowStockModal(false); setImageFile(null); setImagePreview(null); }}>Cancel</Button>
                         <Button onClick={handleUpdateStock} loading={submitLoading}>Save Material</Button>
                     </div>
                 </div>

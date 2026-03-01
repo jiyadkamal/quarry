@@ -9,9 +9,18 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // For transport users, always check Firestore for the latest connectedOperatorId
+        let connectedOperatorId = session.connectedOperatorId;
+        if (session.role === 'transport') {
+            const userDoc = await db.collection('users').doc(session.userId).get();
+            if (userDoc.exists) {
+                connectedOperatorId = userDoc.data()?.connectedOperatorId || null;
+            }
+        }
+
         // Filtering based on role
         const isAdmin = session.role === 'admin';
-        const operatorId = session.role === 'operator' ? session.operatorId : session.connectedOperatorId;
+        const operatorId = session.role === 'operator' ? session.operatorId : connectedOperatorId;
 
         // Users (admin only)
         let users: any[] = [];
@@ -55,7 +64,16 @@ export async function GET() {
             connectedUsers = connSnap.docs.map(d => ({ id: d.id, ...d.data(), password: undefined }));
         }
 
-        return NextResponse.json({ users, stock, productionLogs, requests, connectedUsers });
+        // Include user info with live connectedOperatorId
+        const user = {
+            userId: session.userId,
+            email: session.email,
+            role: session.role,
+            operatorId: session.operatorId,
+            connectedOperatorId: connectedOperatorId,
+        };
+
+        return NextResponse.json({ users, stock, productionLogs, requests, connectedUsers, user });
     } catch (error: any) {
         console.error('Dashboard data error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -19,38 +19,55 @@ const STAGE_LABELS: Record<string, string> = {
 
 function StageProgress({ currentStage }: { currentStage: string }) {
     if (currentStage === 'rejected') {
-        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-danger-light text-danger">Rejected</span>;
+        return <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold bg-red-50 text-red-600 border border-red-200">✕ Rejected</span>;
     }
     if (currentStage === 'pending') {
-        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-warning-light text-warning">Awaiting Approval</span>;
+        return <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold bg-amber-50 text-amber-600 border border-amber-200">⏳ Awaiting Approval</span>;
     }
 
     const stages = ['accepted', 'mining', 'crushing', 'powdering', 'packing', 'completed'];
     const currentIdx = stages.indexOf(currentStage);
 
     return (
-        <div className="flex items-center gap-1 flex-wrap">
-            {stages.map((stage, idx) => {
-                const isCompleted = idx <= currentIdx;
-                const isCurrent = idx === currentIdx;
-                return (
-                    <div key={stage} className="flex items-center gap-1">
-                        <div
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide transition-all ${isCurrent
-                                    ? 'bg-primary text-white shadow-md shadow-primary/20 scale-110'
-                                    : isCompleted
-                                        ? 'bg-success-light text-success'
-                                        : 'bg-gray-100 text-gray-400'
-                                }`}
-                        >
-                            {STAGE_LABELS[stage]}
+        <div className="py-4">
+            {/* Progress line */}
+            <div className="relative flex items-center justify-between">
+                {/* Background line */}
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2" />
+                {/* Filled line */}
+                <div
+                    className="absolute top-1/2 left-0 h-0.5 -translate-y-1/2 transition-all duration-500"
+                    style={{
+                        width: `${(currentIdx / (stages.length - 1)) * 100}%`,
+                        background: 'linear-gradient(90deg, #10B981, #043873)',
+                    }}
+                />
+
+                {stages.map((stage, idx) => {
+                    const isCompleted = idx <= currentIdx;
+                    const isCurrent = idx === currentIdx;
+                    return (
+                        <div key={stage} className="relative flex flex-col items-center z-10">
+                            {/* Dot */}
+                            <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${isCurrent
+                                        ? 'bg-primary text-white shadow-lg shadow-primary/40 ring-4 ring-primary/15'
+                                        : isCompleted
+                                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                                            : 'bg-white text-gray-400 border-2 border-gray-200'
+                                    }`}
+                            >
+                                {isCompleted && !isCurrent ? '✓' : idx + 1}
+                            </div>
+                            {/* Label */}
+                            <span className={`mt-2 text-[10px] font-bold uppercase tracking-wider ${isCurrent ? 'text-primary' : isCompleted ? 'text-emerald-600' : 'text-gray-400'
+                                }`}>
+                                {STAGE_LABELS[stage]}
+                            </span>
                         </div>
-                        {idx < stages.length - 1 && (
-                            <ArrowRight className={`w-3 h-3 ${isCompleted ? 'text-success' : 'text-gray-300'}`} />
-                        )}
-                    </div>
-                );
-            })}
+                    );
+                })}
+            </div>
         </div>
     );
 }
@@ -58,22 +75,33 @@ function StageProgress({ currentStage }: { currentStage: string }) {
 function StatusTimeline({ history }: { history: any[] }) {
     if (!history || history.length === 0) return null;
     return (
-        <div className="mt-3 pl-3 border-l-2 border-primary/15 space-y-2">
-            {history.map((entry: any, idx: number) => (
-                <div key={idx} className="relative pl-4">
-                    <div className="absolute -left-[9px] top-[6px] w-3 h-3 rounded-full bg-primary/20 border-2 border-primary" />
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-primary uppercase">{STAGE_LABELS[entry.stage] || entry.stage}</span>
-                        <span className="text-[10px] text-text-muted">{new Date(entry.timestamp).toLocaleString()}</span>
-                    </div>
-                    {entry.comment && (
-                        <div className="flex items-start gap-1.5 mt-0.5">
-                            <MessageSquare className="w-3 h-3 text-text-muted mt-0.5 shrink-0" />
-                            <p className="text-xs text-text-secondary">{entry.comment}</p>
+        <div className="mt-4 space-y-0">
+            {history.map((entry: any, idx: number) => {
+                const isLast = idx === history.length - 1;
+                return (
+                    <div key={idx} className="flex gap-4">
+                        {/* Timeline column */}
+                        <div className="flex flex-col items-center">
+                            <div className={`w-3 h-3 rounded-full shrink-0 mt-1.5 ${isLast ? 'bg-primary ring-4 ring-primary/10' : 'bg-emerald-400'}`} />
+                            {!isLast && <div className="w-px flex-1 bg-gray-200 my-1" />}
                         </div>
-                    )}
-                </div>
-            ))}
+                        {/* Content */}
+                        <div className={`pb-5 flex-1 ${isLast ? '' : ''}`}>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-xs font-bold uppercase tracking-wide ${isLast ? 'text-primary' : 'text-text-primary'}`}>
+                                    {STAGE_LABELS[entry.stage] || entry.stage}
+                                </span>
+                                <span className="text-[10px] text-text-muted bg-gray-100 px-2 py-0.5 rounded-full">{new Date(entry.timestamp).toLocaleString()}</span>
+                            </div>
+                            {entry.comment && (
+                                <div className="mt-1.5 px-3 py-2 rounded-lg bg-surface border-l-2 border-primary/30 text-sm text-text-secondary">
+                                    {entry.comment}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })}
         </div>
     );
 }
@@ -165,6 +193,21 @@ export default function TransportDashboard() {
                 )}
             </div>
 
+            {/* Hero Section */}
+            {connected && (
+                <div className="relative h-48 rounded-3xl overflow-hidden mb-6 group">
+                    <img src="/images/hero.png" alt="Quarry Hero" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/40 to-transparent z-10" />
+                    <div className="relative z-20 h-full flex flex-col justify-center px-8">
+                        <h2 className="text-3xl font-black text-white tracking-tight">Ready to Order?</h2>
+                        <p className="text-sky/80 text-sm mt-2 max-w-sm">Browse available materials from your operator and place orders in seconds.</p>
+                        <div className="mt-4">
+                            <Button size="sm" icon={Truck} onClick={() => setShowRequestModal(true)}>Place New Order</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Connection Card */}
             {!connected && (
                 <div className="animate-fade-in">
@@ -211,13 +254,29 @@ export default function TransportDashboard() {
                                 {data.stock.map((s: any) => (
                                     <div
                                         key={s.id}
-                                        className="p-5 rounded-2xl bg-surface border border-border-light card-hover cursor-pointer group"
+                                        className="p-0 overflow-hidden rounded-2xl bg-surface border border-border-light card-hover cursor-pointer group hover:border-primary/30"
                                         onClick={() => { setRequestForm({ materialType: s.materialType, quantity: '' }); setShowRequestModal(true); }}
                                     >
-                                        <Package className="w-5 h-5 text-secondary mb-2 group-hover:text-primary transition-colors" />
-                                        <p className="font-semibold text-text-primary">{s.materialType}</p>
-                                        <p className="text-2xl font-bold text-primary mt-1">{s.quantity?.toLocaleString()}</p>
-                                        <p className="text-xs text-text-muted mt-1">Available · Click to order</p>
+                                        {s.imageBase64 ? (
+                                            <div className="h-36 w-full overflow-hidden bg-gray-50 relative">
+                                                <img src={s.imageBase64} alt={s.materialType} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                                            </div>
+                                        ) : (
+                                            <div className="h-36 w-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                                                <Package className="w-12 h-12 text-text-muted/40" />
+                                            </div>
+                                        )}
+                                        <div className="p-5">
+                                            <p className="font-bold text-text-primary text-lg">{s.materialType}</p>
+                                            <div className="flex items-end justify-between mt-2">
+                                                <div>
+                                                    <p className="text-2xl font-black text-primary">{s.quantity?.toLocaleString()}</p>
+                                                    <p className="text-[10px] uppercase font-bold text-text-muted tracking-wide">Available Units</p>
+                                                </div>
+                                                <div className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase">Order Now</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

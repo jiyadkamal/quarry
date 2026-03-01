@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
-import { getSession, setSessionCookie, signJWT } from '@/lib/auth';
+import { getSession, signJWT } from '@/lib/auth';
+
+const COOKIE_NAME = process.env.COOKIE_NAME || 'quarryms_auth';
 
 export async function POST(request: Request) {
     try {
@@ -30,14 +32,23 @@ export async function POST(request: Request) {
             connectedOperatorId: operatorId
         });
 
-        // Update session cookie
+        // Create new JWT with connectedOperatorId
         const newToken = await signJWT({
             ...session,
             connectedOperatorId: operatorId
         });
-        await setSessionCookie(newToken);
 
-        return NextResponse.json({ success: true, connectedOperatorId: operatorId });
+        // Set cookie via NextResponse headers (works in API routes)
+        const response = NextResponse.json({ success: true, connectedOperatorId: operatorId });
+        response.cookies.set(COOKIE_NAME, newToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60,
+            path: '/',
+        });
+
+        return response;
     } catch (error: any) {
         console.error('Operator connection error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
