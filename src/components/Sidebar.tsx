@@ -139,9 +139,12 @@ export default function Sidebar({ role, userName, userEmail, operatorId }: Sideb
             {/* User Info */}
             <div className="p-3" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                 {operatorId && !collapsed && (
-                    <div className="mb-2 px-3 py-3 rounded-xl flex items-center gap-2 hover:bg-accent/25 transition-colors cursor-default" style={{ background: 'rgba(255,228,146,0.2)', border: '1px solid rgba(255,228,146,0.3)' }}>
-                        <ShieldCheck className="w-6 h-6" style={{ color: '#FFE492' }} />
-                        <span className="text-[18px] font-mono font-black tracking-widest text-accent uppercase">{operatorId}</span>
+                    <div className="mb-3 px-4 py-4 rounded-2xl flex flex-col gap-1 hover:bg-accent/30 transition-all cursor-default" style={{ background: 'rgba(255,228,146,0.25)', border: '2px solid rgba(255,228,146,0.4)' }}>
+                        <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-5 h-5" style={{ color: '#FFE492' }} />
+                            <span className="text-[10px] uppercase font-black tracking-[0.2em]" style={{ color: 'rgba(255,228,146,0.7)' }}>Operator ID</span>
+                        </div>
+                        <span className="text-[24px] font-mono font-black tracking-tighter text-accent uppercase leading-none">{operatorId}</span>
                     </div>
                 )}
                 <div className={`flex items-center gap-3 px-2 py-2 ${collapsed ? 'justify-center' : ''}`}>

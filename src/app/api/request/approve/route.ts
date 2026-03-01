@@ -32,7 +32,16 @@ export async function POST(request: Request) {
         }
 
         if (status === 'rejected') {
-            await requestRef.update({ status: 'rejected', updatedAt: new Date().toISOString() });
+            await requestRef.update({
+                status: 'rejected',
+                currentStage: 'rejected',
+                statusHistory: [{
+                    stage: 'rejected',
+                    timestamp: new Date().toISOString(),
+                    updatedBy: session.email,
+                }],
+                updatedAt: new Date().toISOString(),
+            });
             return NextResponse.json({ success: true, status: 'rejected' });
         }
 
@@ -56,8 +65,18 @@ export async function POST(request: Request) {
                 throw new Error('Insufficient stock for approval');
             }
 
-            // Update request status
-            transaction.update(requestRef, { status: 'approved', updatedAt: new Date().toISOString() });
+            // Update request status with initial history
+            transaction.update(requestRef, {
+                status: 'accepted',
+                currentStage: 'accepted',
+                statusHistory: [{
+                    stage: 'accepted',
+                    timestamp: new Date().toISOString(),
+                    updatedBy: session.email,
+                    comment: 'Order accepted and processing started',
+                }],
+                updatedAt: new Date().toISOString(),
+            });
 
             // Update stock quantity
             transaction.update(stockDoc.ref, {

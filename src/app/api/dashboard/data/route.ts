@@ -55,20 +55,7 @@ export async function GET() {
             connectedUsers = connSnap.docs.map(d => ({ id: d.id, ...d.data(), password: undefined }));
         }
 
-        return NextResponse.json({
-            user: {
-                userId: session.userId,
-                email: session.email,
-                role: session.role,
-                operatorId: session.operatorId,
-                connectedOperatorId: session.connectedOperatorId
-            },
-            users,
-            stock,
-            productionLogs,
-            requests,
-            connectedUsers
-        });
+        return NextResponse.json({ users, stock, productionLogs, requests, connectedUsers });
     } catch (error: any) {
         console.error('Dashboard data error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
