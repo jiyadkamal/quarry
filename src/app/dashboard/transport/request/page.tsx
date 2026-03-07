@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Truck, Package } from 'lucide-react';
+import { Truck, Package, IndianRupee } from 'lucide-react';
 import { DataCard, EmptyState, Button, Modal } from '@/components/ui';
 import toast from 'react-hot-toast';
 
@@ -61,6 +61,9 @@ export default function TransportRequestPage() {
                                 <Package className="w-5 h-5 text-secondary mb-2 group-hover:text-primary transition-colors" />
                                 <p className="font-semibold">{s.materialType}</p>
                                 <p className="text-2xl font-bold text-primary mt-1">{s.quantity?.toLocaleString()}</p>
+                                <p className="text-sm font-semibold text-emerald-600 mt-1 flex items-center gap-0.5">
+                                    <IndianRupee className="w-3.5 h-3.5" />{s.pricePerUnit?.toLocaleString() || 0}<span className="text-xs text-text-muted font-normal">/unit</span>
+                                </p>
                                 <p className="text-xs text-text-muted mt-1">Available · Click to order</p>
                             </div>
                         ))}
@@ -103,6 +106,20 @@ export default function TransportRequestPage() {
                         />
                         {selectedStock && (
                             <p className="text-xs text-text-muted mt-1">Max: <span className="font-bold text-primary">{selectedStock.quantity?.toLocaleString()}</span></p>
+                        )}
+                    </div>
+
+                    {/* Live Price Calculation */}
+                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                        <div className="flex justify-between text-sm text-emerald-700">
+                            <span>Price per unit</span>
+                            <span className="font-semibold">₹{selectedStock?.pricePerUnit?.toLocaleString() || 0}</span>
+                        </div>
+                        {(form.quantity && Number(form.quantity) >= 0) && (
+                            <div className="flex justify-between text-sm mt-2 pt-2 border-t border-emerald-200">
+                                <span className="font-bold text-emerald-800">Total Amount</span>
+                                <span className="text-lg font-black text-emerald-700">₹{((selectedStock?.pricePerUnit || 0) * Number(form.quantity)).toLocaleString()}</span>
+                            </div>
                         )}
                     </div>
 

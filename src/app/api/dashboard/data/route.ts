@@ -29,21 +29,25 @@ export async function GET() {
             users = usersSnap.docs.map(d => ({ id: d.id, ...d.data(), password: undefined }));
         }
 
-        // Stock
-        let stockQuery: FirebaseFirestore.Query = db.collection('stock');
-        if (!isAdmin && operatorId) {
-            stockQuery = stockQuery.where('operatorId', '==', operatorId);
+        // Stock — transport users without a connected operator see nothing
+        let stock: any[] = [];
+        if (isAdmin) {
+            const stockSnap = await db.collection('stock').get();
+            stock = stockSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } else if (operatorId) {
+            const stockSnap = await db.collection('stock').where('operatorId', '==', operatorId).get();
+            stock = stockSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         }
-        const stockSnap = await stockQuery.get();
-        const stock = stockSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
         // Production logs
-        let prodQuery: FirebaseFirestore.Query = db.collection('productionLogs');
-        if (!isAdmin && operatorId) {
-            prodQuery = prodQuery.where('operatorId', '==', operatorId);
+        let productionLogs: any[] = [];
+        if (isAdmin) {
+            const prodSnap = await db.collection('productionLogs').get();
+            productionLogs = prodSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } else if (operatorId) {
+            const prodSnap = await db.collection('productionLogs').where('operatorId', '==', operatorId).get();
+            productionLogs = prodSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         }
-        const prodSnap = await prodQuery.get();
-        const productionLogs = prodSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
         // Dispatch requests
         let reqQuery: FirebaseFirestore.Query = db.collection('dispatchRequests');

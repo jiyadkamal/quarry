@@ -9,7 +9,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { materialType, quantity, imageBase64 } = await request.json();
+        const { materialType, quantity, pricePerUnit, imageBase64 } = await request.json();
         if (!materialType || quantity === undefined) {
             return NextResponse.json({ error: 'Material type and quantity are required' }, { status: 400 });
         }
@@ -25,6 +25,9 @@ export async function POST(request: Request) {
             quantity,
             lastUpdated: new Date().toISOString(),
         };
+        if (pricePerUnit !== undefined && pricePerUnit !== null) {
+            stockData.pricePerUnit = Number(pricePerUnit);
+        }
         if (imageBase64) {
             stockData.imageBase64 = imageBase64;
         }

@@ -9,7 +9,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { rawInput, outputType, outputQuantity, date } = await request.json();
+        const { rawInput, outputType, outputQuantity, pricePerUnit, date } = await request.json();
         if (!rawInput || !outputType || !outputQuantity) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
@@ -37,19 +37,25 @@ export async function POST(request: Request) {
             if (stockSnapshot.empty) {
                 // Create new stock doc if doesn't exist
                 const newStockRef = db.collection('stock').doc();
-                transaction.set(newStockRef, {
+                const stockData: any = {
                     operatorId: session.operatorId,
                     materialType: outputType,
                     quantity: outputQuantity,
                     lastUpdated: new Date().toISOString(),
-                });
+                };
+                if (pricePerUnit !== undefined) stockData.pricePerUnit = Number(pricePerUnit);
+
+                transaction.set(newStockRef, stockData);
             } else {
                 // Update existing stock
                 const stockDoc = stockSnapshot.docs[0];
-                transaction.update(stockDoc.ref, {
+                const updateData: any = {
                     quantity: admin.firestore.FieldValue.increment(outputQuantity),
                     lastUpdated: new Date().toISOString(),
-                });
+                };
+                if (pricePerUnit !== undefined) updateData.pricePerUnit = Number(pricePerUnit);
+
+                transaction.update(stockDoc.ref, updateData);
             }
         });
 

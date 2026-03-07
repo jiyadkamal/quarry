@@ -7,7 +7,7 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'quarryms-
 
 const PUBLIC_ROUTES = ['/login', '/register', '/api/auth/login', '/api/auth/register', '/api/seed'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Allow public routes

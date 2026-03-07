@@ -115,6 +115,9 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-lg font-bold text-primary">{s.quantity?.toLocaleString()}</p>
+                                        {s.pricePerUnit !== undefined && (
+                                            <p className="text-xs font-semibold text-emerald-600">₹{s.pricePerUnit?.toLocaleString()}/unit</p>
+                                        )}
                                         <p className="text-xs text-text-muted">{s.lastUpdated ? new Date(s.lastUpdated).toLocaleDateString() : ''}</p>
                                     </div>
                                 </div>

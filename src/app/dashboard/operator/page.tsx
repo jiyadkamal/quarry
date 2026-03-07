@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Package, Wrench, ClipboardList, Users, ArrowRight, MessageSquare, RefreshCw, ImagePlus } from 'lucide-react';
+import { Package, Wrench, ClipboardList, Users, ArrowRight, MessageSquare, RefreshCw, ImagePlus, IndianRupee } from 'lucide-react';
 import { StatCard, DataCard, StatusBadge, EmptyState, Button, Modal, Input } from '@/components/ui';
 import toast from 'react-hot-toast';
 
@@ -43,10 +43,10 @@ function StageProgress({ currentStage }: { currentStage: string }) {
                     return (
                         <div key={stage} className="relative flex flex-col items-center z-10">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${isCurrent
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/40 ring-4 ring-primary/15'
-                                    : isCompleted
-                                        ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
-                                        : 'bg-white text-gray-400 border-2 border-gray-200'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/40 ring-4 ring-primary/15'
+                                : isCompleted
+                                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                                    : 'bg-white text-gray-400 border-2 border-gray-200'
                                 }`}>
                                 {isCompleted && !isCurrent ? '✓' : idx + 1}
                             </div>
@@ -100,7 +100,7 @@ export default function OperatorDashboard() {
     const [showStockModal, setShowStockModal] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
-    const [stockForm, setStockForm] = useState({ materialType: '', quantity: '' });
+    const [stockForm, setStockForm] = useState({ materialType: '', quantity: '', pricePerUnit: '' });
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [statusForm, setStatusForm] = useState({ stage: '', comment: '' });
@@ -132,7 +132,11 @@ export default function OperatorDashboard() {
     const handleUpdateStock = async () => {
         setSubmitLoading(true);
         try {
-            const body: any = { materialType: stockForm.materialType, quantity: Number(stockForm.quantity) };
+            const body: any = {
+                materialType: stockForm.materialType,
+                quantity: Number(stockForm.quantity),
+                pricePerUnit: stockForm.pricePerUnit ? Number(stockForm.pricePerUnit) : 0
+            };
             if (imagePreview) {
                 body.imageBase64 = imagePreview;
             }
@@ -141,7 +145,7 @@ export default function OperatorDashboard() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
-            if (res.ok) { toast.success('Stock updated!'); setShowStockModal(false); setStockForm({ materialType: '', quantity: '' }); setImageFile(null); setImagePreview(null); fetchData(); }
+            if (res.ok) { toast.success('Stock updated!'); setShowStockModal(false); setStockForm({ materialType: '', quantity: '', pricePerUnit: '' }); setImageFile(null); setImagePreview(null); fetchData(); }
             else { const d = await res.json(); toast.error(d.error); }
         } catch { toast.error('Failed'); } finally { setSubmitLoading(false); }
     };
@@ -208,6 +212,16 @@ export default function OperatorDashboard() {
                 <div>
                     <h1 className="text-2xl font-bold text-text-primary">Operator Dashboard</h1>
                     <p className="text-sm text-text-secondary mt-1">Manage orders and material stock</p>
+                    {data?.user?.operatorId && (
+                        <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20">
+                            <span className="text-xs font-medium text-text-secondary">Operator ID:</span>
+                            <span className="text-sm font-bold text-primary font-mono tracking-wide">{data.user.operatorId}</span>
+                            <button
+                                onClick={() => { navigator.clipboard.writeText(data.user.operatorId); toast.success('Operator ID copied!'); }}
+                                className="text-xs text-primary/60 hover:text-primary transition-colors font-medium"
+                            >Copy</button>
+                        </div>
+                    )}
                 </div>
                 <div className="flex gap-3">
                     <Button icon={Package} variant="primary" onClick={() => setShowStockModal(true)}>Add Material</Button>
@@ -293,7 +307,14 @@ export default function OperatorDashboard() {
                                             <p className="text-2xl font-black text-primary">{s.quantity?.toLocaleString()}</p>
                                             <p className="text-[10px] uppercase font-bold text-text-muted tracking-wide">Available Units</p>
                                         </div>
-                                        <div className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase">In Stock</div>
+                                        <div className="text-right">
+                                            {s.pricePerUnit > 0 && (
+                                                <p className="text-sm font-bold text-emerald-600 flex items-center gap-0.5 mb-1">
+                                                    <IndianRupee className="w-3.5 h-3.5" />{s.pricePerUnit.toLocaleString()}<span className="text-[10px] text-text-muted font-normal">/unit</span>
+                                                </p>
+                                            )}
+                                            <div className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase">In Stock</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -329,7 +350,10 @@ export default function OperatorDashboard() {
             <Modal open={showStockModal} onClose={() => { setShowStockModal(false); setImageFile(null); setImagePreview(null); }} title="Add / Update Material">
                 <div className="space-y-4">
                     <Input label="Material Type" name="materialType" placeholder="e.g. Sand, Gravel, Crushed Stone" value={stockForm.materialType} onChange={(e) => setStockForm({ ...stockForm, materialType: e.target.value })} required />
-                    <Input label="Quantity Available" name="quantity" type="number" placeholder="e.g. 1000" value={stockForm.quantity} onChange={(e) => setStockForm({ ...stockForm, quantity: e.target.value })} required />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Quantity Available" name="quantity" type="number" placeholder="e.g. 1000" value={stockForm.quantity} onChange={(e) => setStockForm({ ...stockForm, quantity: e.target.value })} required />
+                        <Input label="Price Per Unit (₹)" name="pricePerUnit" type="number" placeholder="e.g. 50" value={stockForm.pricePerUnit} onChange={(e) => setStockForm({ ...stockForm, pricePerUnit: e.target.value })} />
+                    </div>
 
                     {/* Image Upload */}
                     <div>

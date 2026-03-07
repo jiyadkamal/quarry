@@ -9,7 +9,7 @@ export default function OperatorProductionPage() {
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ rawInput: '', outputType: '', outputQuantity: '' });
+    const [form, setForm] = useState({ rawInput: '', outputType: '', outputQuantity: '', pricePerUnit: '' });
     const [submitLoading, setSubmitLoading] = useState(false);
 
     const fetchData = async () => {
@@ -27,9 +27,13 @@ export default function OperatorProductionPage() {
         try {
             const res = await fetch('/api/operator/log-production', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, outputQuantity: Number(form.outputQuantity) }),
+                body: JSON.stringify({
+                    ...form,
+                    outputQuantity: Number(form.outputQuantity),
+                    pricePerUnit: form.pricePerUnit ? Number(form.pricePerUnit) : undefined
+                }),
             });
-            if (res.ok) { toast.success('Production logged!'); setShowModal(false); setForm({ rawInput: '', outputType: '', outputQuantity: '' }); fetchData(); }
+            if (res.ok) { toast.success('Production logged!'); setShowModal(false); setForm({ rawInput: '', outputType: '', outputQuantity: '', pricePerUnit: '' }); fetchData(); }
             else { const d = await res.json(); toast.error(d.error); }
         } catch { toast.error('Failed'); } finally { setSubmitLoading(false); }
     };
@@ -75,7 +79,10 @@ export default function OperatorProductionPage() {
                 <div className="space-y-4">
                     <Input label="Raw Material Input" name="rawInput" placeholder="e.g. Granite Blocks" value={form.rawInput} onChange={(e) => setForm({ ...form, rawInput: e.target.value })} required />
                     <Input label="Output Material Type" name="outputType" placeholder="e.g. Crushed Stone" value={form.outputType} onChange={(e) => setForm({ ...form, outputType: e.target.value })} required />
-                    <Input label="Output Quantity" name="outputQuantity" type="number" placeholder="500" value={form.outputQuantity} onChange={(e) => setForm({ ...form, outputQuantity: e.target.value })} required />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Output Quantity" name="outputQuantity" type="number" placeholder="500" value={form.outputQuantity} onChange={(e) => setForm({ ...form, outputQuantity: e.target.value })} required />
+                        <Input label="Price Per Unit (₹)" name="pricePerUnit" type="number" placeholder="50" value={form.pricePerUnit} onChange={(e) => setForm({ ...form, pricePerUnit: e.target.value })} />
+                    </div>
                     <div className="flex justify-end gap-3 pt-2">
                         <Button variant="ghost" onClick={() => setShowModal(false)}>Cancel</Button>
                         <Button onClick={handleSubmit} loading={submitLoading}>Log Entry</Button>

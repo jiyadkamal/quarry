@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { History, ArrowRight, MessageSquare } from 'lucide-react';
+import { History, ArrowRight, MessageSquare, IndianRupee, CheckCircle2 } from 'lucide-react';
 import { DataCard, StatusBadge, EmptyState } from '@/components/ui';
 
 const STAGE_LABELS: Record<string, string> = {
@@ -41,10 +41,10 @@ function StageProgress({ currentStage }: { currentStage: string }) {
                     return (
                         <div key={stage} className="relative flex flex-col items-center z-10">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${isCurrent
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/40 ring-4 ring-primary/15'
-                                    : isCompleted
-                                        ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
-                                        : 'bg-white text-gray-400 border-2 border-gray-200'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/40 ring-4 ring-primary/15'
+                                : isCompleted
+                                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                                    : 'bg-white text-gray-400 border-2 border-gray-200'
                                 }`}>
                                 {isCompleted && !isCurrent ? '✓' : idx + 1}
                             </div>
@@ -124,9 +124,28 @@ export default function TransportHistoryPage() {
                                     <div>
                                         <p className="font-semibold text-text-primary text-lg">{r.materialType}</p>
                                         <p className="text-sm text-text-secondary">Quantity: <span className="font-bold text-primary text-lg">{r.quantity}</span></p>
+                                        {r.totalPrice > 0 && (
+                                            <p className="text-sm font-semibold text-emerald-600 flex items-center gap-0.5">
+                                                <IndianRupee className="w-3.5 h-3.5" />{r.totalPrice?.toLocaleString()}
+                                                <span className="text-xs text-text-muted font-normal ml-1">(₹{r.pricePerUnit}/unit)</span>
+                                            </p>
+                                        )}
                                         <p className="text-xs text-text-muted">{new Date(r.date).toLocaleString()}</p>
                                     </div>
-                                    <StatusBadge status={r.currentStage || r.status} />
+                                    <div className="flex flex-col items-end gap-2">
+                                        <StatusBadge status={r.currentStage || r.status} />
+                                        {r.status !== 'pending' && r.status !== 'rejected' && (
+                                            r.paymentStatus === 'paid' ? (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                                                    <CheckCircle2 className="w-3 h-3" /> Paid
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200">
+                                                    Unpaid
+                                                </span>
+                                            )
+                                        )}
+                                    </div>
                                 </div>
                                 <StageProgress currentStage={r.currentStage || r.status} />
                                 <StatusTimeline history={r.statusHistory} />
@@ -138,3 +157,4 @@ export default function TransportHistoryPage() {
         </div>
     );
 }
+

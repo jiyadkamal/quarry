@@ -38,6 +38,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Insufficient stock' }, { status: 400 });
         }
 
+        const pricePerUnit = stockData.pricePerUnit || 0;
+        const totalPrice = pricePerUnit * quantity;
+
         // Create request
         const newRequest = {
             operatorId: connectedOperatorId,
@@ -45,8 +48,11 @@ export async function POST(request: Request) {
             requestedByEmail: session.email,
             materialType,
             quantity,
+            pricePerUnit,
+            totalPrice,
             status: 'pending',
             currentStage: 'pending',
+            paymentStatus: 'unpaid',
             statusHistory: [],
             date: new Date().toISOString(),
         };
